@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Case Rush</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg:#0f1218;--panel:#181d27;--panel2:#222938;--text:#e8ecf3;--muted:#8a93a6;--accent:#f5b83d}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,system-ui,"Segoe UI",Roboto,sans-serif}
+body{min-height:100vh;padding-bottom:80px;user-select:none;-webkit-user-select:none}
+header{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(15,18,24,.94);backdrop-filter:blur(8px);border-bottom:1px solid #ffffff10}
+.logo{font-weight:900;letter-spacing:.5px;font-size:18px}
+.logo span{color:var(--accent)}
+.bal{display:flex;gap:8px;align-items:center}
+.coins{background:var(--panel2);padding:6px 12px;border-radius:999px;font-weight:700;font-variant-numeric:tabular-nums}
+.bonus{background:var(--accent);color:#1a1300;border:0;border-radius:999px;padding:6px 10px;font-weight:800;font-size:13px;font-variant-numeric:tabular-nums}
+.bonus:disabled{background:var(--panel2);color:var(--muted)}
+main{padding:16px}
+.screen{display:none}.screen.active{display:block}
+h2{font-size:13px;margin:4px 0 12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.cases{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.case{background:var(--panel);border-radius:16px;padding:16px 10px 14px;text-align:center;border:1px solid #ffffff0d;cursor:pointer;transition:transform .1s}
+.case:active{transform:scale(.97)}
+.box{height:74px;width:100px;margin:0 auto 12px;border-radius:12px;position:relative;background:linear-gradient(155deg,var(--c) 0%,color-mix(in srgb,var(--c) 35%,#000) 100%);box-shadow:0 10px 26px -10px var(--c)}
+.box::before{content:"";position:absolute;left:0;right:0;top:24px;height:7px;background:#00000055}
+.box::after{content:"";position:absolute;left:43px;top:19px;width:14px;height:17px;border-radius:4px;background:#ffffffd0;box-shadow:inset 0 -5px 0 #0002}
+.box i{position:absolute;inset:auto 8px 8px auto;font-style:normal;font-size:18px}
+.case b{display:block;font-size:15px}
+.price{color:var(--accent);font-weight:800;margin-top:4px}
+.back{background:none;border:0;color:var(--muted);font-size:15px;padding:0;margin-bottom:12px}
+.title{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.title .box{margin:0;width:64px;height:48px}
+.title .box::before{top:16px;height:5px}.title .box::after{left:27px;top:12px;width:10px;height:12px}
+.title .box i{font-size:12px;inset:auto 4px 4px auto}
+.title h1{font-size:20px;margin:0}
+.roll{position:relative;height:132px;background:var(--panel);border-radius:14px;overflow:hidden;margin-bottom:14px}
+.strip{position:absolute;left:0;top:11px;display:flex;gap:6px;will-change:transform}
+.marker{position:absolute;left:50%;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--accent);z-index:2;box-shadow:0 0 10px var(--accent)}
+.marker::before,.marker::after{content:"";position:absolute;left:-6px;border:7px solid transparent}
+.marker::before{top:0;border-top-color:var(--accent)}.marker::after{bottom:0;border-bottom-color:var(--accent)}
+.roll::before,.roll::after{content:"";position:absolute;top:0;bottom:0;width:36px;z-index:1;pointer-events:none}
+.roll::before{left:0;background:linear-gradient(90deg,var(--panel),transparent)}
+.roll::after{right:0;background:linear-gradient(-90deg,var(--panel),transparent)}
+.item{flex:0 0 110px;height:110px;border-radius:10px;background:linear-gradient(180deg,var(--panel2),#141821);border-bottom:4px solid var(--rc);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px;position:relative;overflow:hidden}
+.item::before{content:"";position:absolute;left:0;right:0;bottom:0;height:65%;background:radial-gradient(ellipse at 50% 100%,var(--rc),transparent 70%);opacity:.35}
+.item svg{width:84px;height:34px;fill:#e9edf5;position:relative;filter:drop-shadow(0 2px 4px #0009)}
+.item .w{font-size:11px;color:var(--muted);margin-top:6px;position:relative;white-space:nowrap}
+.item .n{font-size:12px;font-weight:600;text-align:center;line-height:1.15;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.item .p{font-size:12px;font-weight:800;color:var(--accent);position:relative;margin-top:2px}
+.st{color:#f08a24;font-weight:800}
+.open{width:100%;border:0;border-radius:12px;padding:15px;font-size:16px;font-weight:800;background:var(--accent);color:#1a1300}
+.open:disabled{opacity:.45}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 10px}
+.chip{font-size:11px;padding:4px 8px;border-radius:999px;background:var(--panel);border-left:3px solid var(--rc);color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.grid .item{flex:none;width:auto;height:100px}
+.grid .item svg{width:72px;height:29px}
+.inv-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px}
+.inv-top .sum{color:var(--muted);font-size:13px}
+.inv-top .sum b{color:var(--text)}
+.small{border:0;border-radius:10px;padding:9px 12px;font-weight:700;background:var(--panel2);color:var(--text);font-size:13px}
+.empty{color:var(--muted);text-align:center;padding:48px 16px;line-height:1.5}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--panel);border-radius:14px;padding:14px}
+.stat span{display:block;color:var(--muted);font-size:12px;margin-bottom:4px}
+.stat b{font-size:20px;font-variant-numeric:tabular-nums}
+.best{margin-top:14px}
+.row{display:flex;justify-content:space-between;align-items:center;background:var(--panel);border-radius:14px;padding:14px;margin-top:10px}
+.modal{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;z-index:20;padding:24px}
+.modal.show{display:flex}
+.card{background:var(--panel);border-radius:18px;padding:22px 18px 18px;width:100%;max-width:340px;text-align:center;border-top:4px solid var(--rc);animation:pop .35s cubic-bezier(.2,1.4,.4,1);position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;left:-20%;right:-20%;top:-40px;height:200px;background:radial-gradient(ellipse at 50% 40%,var(--rc),transparent 65%);opacity:.3}
+@keyframes pop{from{transform:scale(.7);opacity:0}}
+.card>*{position:relative}
+.card svg{width:210px;height:84px;fill:#eef1f7;filter:drop-shadow(0 0 16px var(--rc))}
+.card .rn{color:var(--rc);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-top:8px}
+.card .cw{color:var(--muted);font-size:14px;margin-top:6px}
+.card .cn{font-size:20px;font-weight:800;margin-top:2px}
+.card .cwear{color:var(--muted);font-size:13px;margin-top:4px}
+.card .cp{color:var(--accent);font-size:22px;font-weight:900;margin-top:10px}
+.btns{display:flex;gap:8px;margin-top:16px}
+.btn{flex:1;border:0;border-radius:12px;padding:13px 8px;font-weight:800;font-size:15px;background:var(--panel2);color:var(--text)}
+.small.y{background:var(--accent);color:#1a1300}
+.btn.y{background:var(--accent);color:#1a1300}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--panel);border-top:1px solid #ffffff10;padding-bottom:env(safe-area-inset-bottom);z-index:6}
+nav button{flex:1;background:none;border:0;color:var(--muted);padding:10px 0 12px;font-size:12px;font-weight:700}
+nav button i{display:block;font-style:normal;font-size:20px;margin-bottom:2px}
+nav button.on{color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:96px;transform:translate(-50%,20px);background:#2b3243;color:var(--text);padding:10px 16px;border-radius:12px;font-weight:600;font-size:14px;opacity:0;transition:.25s;z-index:30;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.up-slots{display:grid;grid-template-columns:1fr 28px 1fr;gap:6px;align-items:center}
+.slot{height:124px;border-radius:12px;background:var(--panel);border:1px dashed #ffffff26;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;text-align:center;padding:6px;overflow:hidden}
+.slot.full{border:0;padding:0}
+.slot .item{flex:none;width:100%;height:100%}
+.arrow{text-align:center;color:var(--accent);font-size:20px;font-weight:900}
+.ring{position:relative;width:156px;height:156px;margin:16px auto 12px}
+.ring svg{width:100%;height:100%}
+.ring .pct{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:28px;font-weight:900;pointer-events:none}
+.ring .pct small{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px}
+#ptr{transform-origin:80px 80px}
+.mults{display:flex;gap:6px;justify-content:center;margin-bottom:12px;flex-wrap:wrap}
+.mult{border:0;border-radius:10px;padding:9px 0;width:56px;font-weight:800;background:var(--panel2);color:var(--text);font-size:14px}
+.mult.on{background:var(--accent);color:#1a1300}
+.up-btns{display:flex;gap:8px;margin-bottom:18px}
+.up-btns .small{flex:0 0 auto}
+.up-btns .open{flex:1}
+.item.sel{outline:2px solid var(--accent);outline-offset:-2px}
+.card .head{font-size:18px;font-weight:900;margin-bottom:6px}
+.lose svg{opacity:.35;filter:grayscale(1)}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">CASE<span>RUSH</span></div>
+  <div class="bal"><button class="bonus" id="bonus">+300</button><div class="coins" id="bal">🪙 0</div></div>
+</header>
+
+<main>
+  <section class="screen active" id="s-cases">
+    <h2>Кейсы</h2>
+    <div class="cases" id="cases"></div>
+  </section>
+
+  <section class="screen" id="s-case">
+    <button class="back" id="back">‹ Назад к кейсам</button>
+    <div class="title"><div class="box" id="cbox"></div><div><h1 id="cname"></h1><div class="price" id="cprice"></div></div></div>
+    <div class="roll" id="roll"><div class="marker"></div><div class="strip" id="strip"></div></div>
+    <button class="open" id="open">Открыть</button>
+    <div class="chips" id="chips"></div>
+    <h2>Содержимое</h2>
+    <div class="grid" id="contents"></div>
+  </section>
+
+  <section class="screen" id="s-up">
+    <h2>Апгрейд скина</h2>
+    <div class="up-slots"><div class="slot" id="up-sel"></div><div class="arrow">➜</div><div class="slot" id="up-tgt"></div></div>
+    <div class="ring">
+      <svg viewBox="0 0 160 160">
+        <circle cx="80" cy="80" r="64" fill="none" stroke="#222938" stroke-width="14"/>
+        <circle id="up-arc" cx="80" cy="80" r="64" fill="none" stroke="#3ecf6e" stroke-width="14" stroke-dasharray="0 999" transform="rotate(-90 80 80)"/>
+        <g id="ptr"><path d="M80 6 l-8 -6 h16z" fill="#f5b83d" transform="translate(0 10)"/><path d="M80 10 l-7 12 h14z" fill="#f5b83d"/></g>
+      </svg>
+      <div class="pct"><span id="up-pct">0%</span><small>шанс</small></div>
+    </div>
+    <div class="mults" id="mults"></div>
+    <div class="up-btns"><button class="small" id="up-reroll">🔄 Другая цель</button><button class="open" id="up-go">Апгрейд</button></div>
+    <h2>Выбери скин из инвентаря</h2>
+    <div class="grid" id="up-inv"></div>
+  </section>
+
+  <section class="screen" id="s-inv">
+    <div class="inv-top"><div class="sum" id="invsum"></div><button class="small" id="sellall">Продать всё</button></div>
+    <div class="grid" id="inv"></div>
+  </section>
+
+  <section class="screen" id="s-prof">
+    <h2>Статистика</h2>
+    <div class="stats" id="stats"></div>
+    <div id="bestwrap"></div>
+    <div class="row donate"><span>💛 Нравится игра?</span><button class="small y" id="donate">⭐ Поддержать автора</button></div>
+    <div class="row"><span>Звук</span><button class="small" id="sound"></button></div>
+    <div class="row"><span>Начать заново</span><button class="small" id="reset">Сбросить</button></div>
+  </section>
+</main>
+
+<nav>
+  <button class="on" data-s="s-cases"><i>📦</i>Кейсы</button>
+  <button data-s="s-up"><i>⬆️</i>Апгрейд</button>
+  <button data-s="s-inv"><i>🎒</i>Инвентарь</button>
+  <button data-s="s-prof"><i>📊</i>Профиль</button>
+</nav>
+
+<div class="modal" id="modal"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ---------- Настройки ----------
+// Юзернейм твоего бота без @ (например: caserush_game_bot)
+const BOT_USERNAME = 'Case11Rush_bot';
+
+// ---------- Telegram ----------
+const tg = window.Telegram && window.Telegram.WebApp;
+if (tg) { try { tg.ready(); tg.expand(); tg.setHeaderColor('#0f1218'); tg.setBackgroundColor('#0f1218'); } catch (e) {} }
+function haptic(kind) {
+  try {
+    if (!tg || !tg.HapticFeedback) return;
+    if (kind === 'tick') tg.HapticFeedback.selectionChanged();
+    else if (['success', 'error', 'warning'].includes(kind)) tg.HapticFeedback.notificationOccurred(kind);
+    else tg.HapticFeedback.impactOccurred(kind);
+  } catch (e) {}
+}
+
+// ---------- Данные ----------
+const RAR = {
+  blue:   { name: 'Обычное',     color: '#4b69ff', w: 79.92, base: 35 },
+  purple: { name: 'Редкое',      color: '#8847ff', w: 15.98, base: 150 },
+  pink:   { name: 'Эпическое',   color: '#d32ce6', w: 3.2,   base: 600 },
+  red:    { name: 'Мифическое',  color: '#eb4b4b', w: 0.64,  base: 2200 },
+  gold:   { name: 'Легендарное ★', color: '#e4ae39', w: 0.26, base: 7000 }
+};
+const ORDER = ['blue', 'purple', 'pink', 'red', 'gold'];
+// [название, сокращение, множитель цены, шанс %]
+const WEAR = [
+  ['Новое', 'Новое', 1.25, 10],
+  ['Почти новое', 'Почти новое', 1.0, 25],
+  ['Б/у', 'Б/у', 0.85, 40],
+  ['Потёртое', 'Потёртое', 0.75, 10],
+  ['Боевые шрамы', 'Шрамы', 0.65, 15]
+];
+
+const ICON = {
+  rifle:  '<path d="M3 16h50l3-3h30v3h11v4H60l-3 3h-7l-4 11h-8l3-11h-9l-7 9h-9l6-9H3z"/>',
+  sniper: '<path d="M2 17h38v-2h56v4H54l-3 4h-9l-5 10h-8l4-10H18l-4 5H4l2-5H2z"/><path d="M44 9h16v5H44z"/>',
+  pistol: '<path d="M28 11h46v9H52l-2 3h-6l-5 13H28l5-14h-5z"/>',
+  smg:    '<path d="M12 14h62v3h8v4H50l-2 13h-8l1-13h-6l-3 7h-8l2-7H20l-3 5h-8l2-5h-1z"/>',
+  shotgun:'<path d="M4 17h34l2-2h52v4H44l-2 3h-6l-6 9h-9l5-9H4z"/><path d="M48 20h22v4H48z"/>',
+  mg:     '<path d="M3 15h48v-3h40v3h7v4H58l-2 3h-6l-3 10h-8l2-10h-8v8H22l3-8H3z"/><path d="M70 19h3v13h-3z"/>',
+  knife:  '<path d="M6 18h22v-3h4v3l40-7c14 0 22 3 22 6s-6 5-22 5l-40 2v3h-4v-3H6z"/>'
+};
+const svg = t => `<svg viewBox="0 0 100 40">${ICON[t]}</svg>`;
+
+// [оружие, скин, редкость, тип иконки, множитель цены]
+const CASES = [
+  { id: 'spark', name: 'Искра', emoji: '⚡', price: 100, color: '#3d7bff', items: [
+    ['Пистолет «Оса»', 'Ржавый болт', 'blue', 'pistol', .8],
+    ['ПП «Шмель»', 'Мокрый асфальт', 'blue', 'smg', .9],
+    ['Пистолет «Гюрза»', 'Синий шум', 'blue', 'pistol', 1],
+    ['ПП «Вихрь»', 'Тундра', 'blue', 'smg', 1.1],
+    ['Винтовка «Сокол»', 'Гранит', 'blue', 'rifle', 1.2],
+    ['Винтовка «Ястреб»', 'Цифровой прибой', 'purple', 'rifle', 1],
+    ['Револьвер «Кобра»', 'Медная жила', 'purple', 'pistol', 1.1],
+    ['Снайперка «Игла»', 'Туманный перевал', 'purple', 'sniper', .9],
+    ['Автомат «Буран»', 'Неоновый рассвет', 'pink', 'rifle', 1.1],
+    ['Пистолет «Тень»', 'Полярная ночь', 'pink', 'pistol', .9],
+    ['Снайперка «Гром»', 'Раскалённый металл', 'red', 'sniper', 1.2],
+    ['Винтовка «Ястреб»', 'Звёздная пыль', 'red', 'rifle', .9],
+    ['★ Нож «Коготь»', 'Северное сияние', 'gold', 'knife', 1.2],
+    ['★ Нож «Мотылёк»', 'Полночь', 'gold', 'knife', 1]
+  ]},
+  { id: 'neon', name: 'Неон', emoji: '🌆', price: 250, color: '#c53be0', items: [
+    ['ПП «Шмель»', 'Пиксель', 'blue', 'smg', .9],
+    ['Пистолет «Оса»', 'Розовый шум', 'blue', 'pistol', .8],
+    ['Винтовка «Сокол»', 'Голограмма', 'blue', 'rifle', 1.1],
+    ['ПП «Вихрь»', 'Ночной трафик', 'blue', 'smg', 1.2],
+    ['Пистолет «Гюрза»', 'Синтвейв', 'purple', 'pistol', .9],
+    ['Снайперка «Игла»', 'Лазерная сетка', 'purple', 'sniper', 1],
+    ['Автомат «Буран»', 'Неоновый ливень', 'purple', 'rifle', 1.1],
+    ['Винтовка «Ястреб»', 'Киберпанк', 'pink', 'rifle', 1],
+    ['Револьвер «Кобра»', 'Электрошок', 'pink', 'pistol', 1],
+    ['Автомат «Буран»', 'Ультрафиолет', 'red', 'rifle', 1.1],
+    ['Снайперка «Гром»', 'Мегаполис', 'red', 'sniper', 1],
+    ['★ Нож «Клык»', 'Плазма', 'gold', 'knife', 1.1],
+    ['★ Нож «Коготь»', 'Глитч', 'gold', 'knife', 1]
+  ]},
+  { id: 'shadow', name: 'Тень', emoji: '🌑', price: 500, color: '#e0484f', items: [
+    ['Пистолет «Тень»', 'Сажа', 'blue', 'pistol', .9],
+    ['ПП «Шмель»', 'Пепел', 'blue', 'smg', 1],
+    ['Винтовка «Сокол»', 'Графит', 'blue', 'rifle', 1.1],
+    ['ПП «Вихрь»', 'Дым', 'blue', 'smg', 1],
+    ['Снайперка «Игла»', 'Затмение', 'purple', 'sniper', 1],
+    ['Винтовка «Ястреб»', 'Чёрный лёд', 'purple', 'rifle', 1.1],
+    ['Револьвер «Кобра»', 'Вороново крыло', 'purple', 'pistol', .9],
+    ['Автомат «Буран»', 'Кровавая луна', 'pink', 'rifle', 1.1],
+    ['Пистолет «Гюрза»', 'Призрак', 'pink', 'pistol', .9],
+    ['Снайперка «Гром»', 'Багровый туман', 'red', 'sniper', 1.2],
+    ['Автомат «Буран»', 'Обсидиан', 'red', 'rifle', .9],
+    ['★ Нож «Мотылёк»', 'Тёмная материя', 'gold', 'knife', 1.1],
+    ['★ Нож «Серп»', 'Ночной охотник', 'gold', 'knife', 1]
+  ]},
+  { id: 'legend', name: 'Легенда', emoji: '👑', price: 1000, color: '#e4ae39', items: [
+    ['Пистолет «Оса»', 'Латунь', 'blue', 'pistol', .9],
+    ['ПП «Вихрь»', 'Песчаная буря', 'blue', 'smg', 1],
+    ['Винтовка «Сокол»', 'Бронза', 'blue', 'rifle', 1.1],
+    ['ПП «Шмель»', 'Янтарь', 'blue', 'smg', 1],
+    ['Револьвер «Кобра»', 'Королевская гравировка', 'purple', 'pistol', 1],
+    ['Снайперка «Игла»', 'Сокровище', 'purple', 'sniper', 1.1],
+    ['Винтовка «Ястреб»', 'Фараон', 'purple', 'rifle', .9],
+    ['Автомат «Буран»', 'Солнечный трон', 'pink', 'rifle', 1.1],
+    ['Снайперка «Гром»', 'Золотой век', 'pink', 'sniper', 1],
+    ['Автомат «Буран»', 'Корона', 'red', 'rifle', 1],
+    ['Снайперка «Гром»', 'Император', 'red', 'sniper', 1.2],
+    ['★ Нож «Клык»', 'Чистое золото', 'gold', 'knife', 1.2],
+    ['★ Нож «Серп»', 'Алмаз', 'gold', 'knife', 1]
+  ]},
+  { id: 'storm', name: 'Буря', emoji: '⛈️', price: 150, color: '#2bb3c0', items: [
+    ['Пистолет «Оса»', 'Морось', 'blue', 'pistol', .8],
+    ['Дробовик «Бизон»', 'Серый шторм', 'blue', 'shotgun', .9],
+    ['ПП «Шмель»', 'Град', 'blue', 'smg', 1],
+    ['Винтовка «Сокол»', 'Мокрый бетон', 'blue', 'rifle', 1.2],
+    ['Пулемёт «Молот»', 'Грозовой фронт', 'purple', 'mg', 1],
+    ['Снайперка «Игла»', 'Молния', 'purple', 'sniper', 1.1],
+    ['Револьвер «Кобра»', 'Штиль', 'purple', 'pistol', .9],
+    ['Автомат «Буран»', 'Ураган', 'pink', 'rifle', 1.1],
+    ['Дробовик «Бизон»', 'Цунами', 'pink', 'shotgun', .9],
+    ['Снайперка «Гром»', 'Око бури', 'red', 'sniper', 1.1],
+    ['Винтовка «Ястреб»', 'Торнадо', 'red', 'rifle', 1],
+    ['★ Нож «Коготь»', 'Гроза', 'gold', 'knife', 1.1],
+    ['★ Нож «Клык»', 'Штормовое небо', 'gold', 'knife', 1]
+  ]},
+  { id: 'jungle', name: 'Джунгли', emoji: '🌴', price: 350, color: '#3fae5a', items: [
+    ['ПП «Вихрь»', 'Мох', 'blue', 'smg', .9],
+    ['Пистолет «Гюрза»', 'Лиана', 'blue', 'pistol', .8],
+    ['Дробовик «Бизон»', 'Болото', 'blue', 'shotgun', 1.1],
+    ['Винтовка «Сокол»', 'Бамбук', 'blue', 'rifle', 1.2],
+    ['Винтовка «Ястреб»', 'Хамелеон', 'purple', 'rifle', 1.1],
+    ['Пулемёт «Молот»', 'Питон', 'purple', 'mg', 1],
+    ['Снайперка «Игла»', 'Изумруд', 'purple', 'sniper', .9],
+    ['Автомат «Буран»', 'Ягуар', 'pink', 'rifle', 1.1],
+    ['Пистолет «Тень»', 'Ядовитая лягушка', 'pink', 'pistol', .9],
+    ['Снайперка «Гром»', 'Тигр', 'red', 'sniper', 1.2],
+    ['Автомат «Буран»', 'Древний храм', 'red', 'rifle', .9],
+    ['★ Нож «Мотылёк»', 'Изумрудный змей', 'gold', 'knife', 1.1],
+    ['★ Нож «Серп»', 'Хищник', 'gold', 'knife', 1]
+  ]},
+  { id: 'cosmos', name: 'Космос', emoji: '🚀', price: 750, color: '#5b6cff', items: [
+    ['Пистолет «Оса»', 'Метеорит', 'blue', 'pistol', .9],
+    ['ПП «Шмель»', 'Орбита', 'blue', 'smg', 1],
+    ['Дробовик «Бизон»', 'Лунная пыль', 'blue', 'shotgun', 1],
+    ['ПП «Вихрь»', 'Спутник', 'blue', 'smg', 1.1],
+    ['Револьвер «Кобра»', 'Сверхновая', 'purple', 'pistol', 1],
+    ['Винтовка «Сокол»', 'Туманность', 'purple', 'rifle', 1.1],
+    ['Пулемёт «Молот»', 'Астероид', 'purple', 'mg', .9],
+    ['Винтовка «Ястреб»', 'Чёрная дыра', 'pink', 'rifle', 1.1],
+    ['Снайперка «Игла»', 'Квазар', 'pink', 'sniper', .9],
+    ['Автомат «Буран»', 'Галактика', 'red', 'rifle', 1],
+    ['Снайперка «Гром»', 'Пульсар', 'red', 'sniper', 1.2],
+    ['★ Нож «Клык»', 'Млечный путь', 'gold', 'knife', 1.2],
+    ['★ Нож «Коготь»', 'Звездопад', 'gold', 'knife', 1]
+  ]},
+  { id: 'chaos', name: 'Хаос', emoji: '🔥', price: 2000, color: '#ff6a2b', items: [
+    ['Пистолет «Гюрза»', 'Искры', 'blue', 'pistol', .9],
+    ['ПП «Шмель»', 'Окалина', 'blue', 'smg', 1],
+    ['Дробовик «Бизон»', 'Угли', 'blue', 'shotgun', 1],
+    ['Винтовка «Сокол»', 'Зола', 'blue', 'rifle', 1.1],
+    ['Пулемёт «Молот»', 'Лава', 'purple', 'mg', 1.1],
+    ['Снайперка «Игла»', 'Вспышка', 'purple', 'sniper', 1],
+    ['Револьвер «Кобра»', 'Пламя', 'purple', 'pistol', .9],
+    ['Автомат «Буран»', 'Инферно', 'pink', 'rifle', 1.1],
+    ['Винтовка «Ястреб»', 'Феникс', 'pink', 'rifle', .9],
+    ['Снайперка «Гром»', 'Апокалипсис', 'red', 'sniper', 1.2],
+    ['Автомат «Буран»', 'Магма', 'red', 'rifle', .9],
+    ['★ Нож «Серп»', 'Огненный шторм', 'gold', 'knife', 1.2],
+    ['★ Нож «Мотылёк»', 'Солнечная вспышка', 'gold', 'knife', 1]
+  ]}
+];
+CASES.sort((a, b) => a.price - b.price);
+const CATALOG = [];
+CASES.forEach(c => c.items.forEach(i => CATALOG.push({ c: c.id, w: i[0], n: i[1], r: i[2], t: i[3], price: Math.max(1, Math.round(RAR[i[2]].base * c.price / 100 * i[4])) })));
+
+// ---------- Состояние ----------
+const KEY = 'caserush_v1';
+let S = { bal: 1000, inv: [], opened: 0, spent: 0, earned: 0, best: null, bonusAt: 0, sound: true, ups: 0, upWins: 0 };
+try { const d = JSON.parse(localStorage.getItem(KEY)); if (d) S = Object.assign(S, d); } catch (e) {}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+const $ = id => document.getElementById(id);
+const fmt = n => Math.round(n).toLocaleString('ru-RU');
+const BONUS = 300, BONUS_CD = 3 * 60 * 60 * 1000;
+let cur = null, spinning = false;
+
+// ---------- Логика ----------
+function weighted(list, getW) {
+  const total = list.reduce((s, x) => s + getW(x), 0);
+  let t = Math.random() * total;
+  for (const x of list) { t -= getW(x); if (t < 0) return x; }
+  return list[list.length - 1];
+}
+function rollItem(c) {
+  const r = weighted(ORDER, k => RAR[k].w);
+  const pool = c.items.filter(i => i[2] === r);
+  const it = pool[Math.floor(Math.random() * pool.length)];
+  const wear = weighted(WEAR, w => w[3]);
+  const st = Math.random() < 0.1;
+  const price = Math.max(1, Math.round(RAR[r].base * (c.price / 100) * it[4] * wear[2] * (st ? 1.5 : 1)));
+  return { id: Date.now() + '' + Math.random().toString(36).slice(2, 7), c: c.id, w: it[0], n: it[1], r, t: it[3], wear: wear[0], st, price };
+}
+function filler(c) {
+  const vis = { blue: 55, purple: 26, pink: 12, red: 5, gold: 2 };
+  const r = weighted(ORDER, k => vis[k]);
+  const pool = c.items.filter(i => i[2] === r);
+  const it = pool[Math.floor(Math.random() * pool.length)];
+  return { w: it[0], n: it[1], r, t: it[3] };
+}
+
+// ---------- Отрисовка ----------
+function itemEl(it, extra) {
+  const d = document.createElement('div');
+  d.className = 'item';
+  d.style.setProperty('--rc', RAR[it.r].color);
+  d.innerHTML = `${svg(it.t)}<div class="w">${it.st ? '<span class="st">ТРЕКЕР</span> ' : ''}${it.w}</div><div class="n">${it.n}</div>${extra || ''}`;
+  return d;
+}
+function boxHTML(c) { return `<i>${c.emoji}</i>`; }
+function updateBal() { $('bal').textContent = '🪙 ' + fmt(S.bal); }
+
+function renderCases() {
+  const el = $('cases'); el.innerHTML = '';
+  CASES.forEach(c => {
+    const d = document.createElement('div');
+    d.className = 'case';
+    d.innerHTML = `<div class="box" style="--c:${c.color}">${boxHTML(c)}</div><b>${c.name}</b><div class="price">🪙 ${fmt(c.price)}</div>`;
+    d.onclick = () => openCaseView(c);
+    el.appendChild(d);
+  });
+}
+
+function openCaseView(c) {
+  cur = c;
+  const box = $('cbox'); box.style.setProperty('--c', c.color); box.innerHTML = boxHTML(c);
+  $('cname').textContent = c.name;
+  $('cprice').textContent = '🪙 ' + fmt(c.price);
+  $('open').textContent = `Открыть за ${fmt(c.price)} 🪙`;
+  $('chips').innerHTML = ORDER.map(r => `<span class="chip" style="--rc:${RAR[r].color}">${RAR[r].name} · ${RAR[r].w}%</span>`).join('');
+  const ct = $('contents'); ct.innerHTML = '';
+  [...c.items].sort((a, b) => ORDER.indexOf(b[2]) - ORDER.indexOf(a[2]))
+    .forEach(i => ct.appendChild(itemEl({ w: i[0], n: i[1], r: i[2], t: i[3] })));
+  const strip = $('strip');
+  strip.style.transition = 'none'; strip.style.transform = 'translateX(0)'; strip.innerHTML = '';
+  for (let i = 0; i < 12; i++) strip.appendChild(itemEl(filler(c)));
+  show('s-case');
+  window.scrollTo(0, 0);
+  if (tg && tg.BackButton) { try { tg.BackButton.show(); } catch (e) {} }
+}
+
+function renderInv() {
+  const el = $('inv'); el.innerHTML = '';
+  const total = S.inv.reduce((s, x) => s + x.price, 0);
+  $('invsum').innerHTML = `Предметов: <b>${S.inv.length}</b> · на <b>🪙 ${fmt(total)}</b>`;
+  $('sellall').style.display = S.inv.length ? '' : 'none';
+  if (!S.inv.length) { el.innerHTML = '<div class="empty" style="grid-column:1/-1">Пока пусто.<br>Открой кейс и забери первый скин!</div>'; return; }
+  S.inv.forEach(it => {
+    const d = itemEl(it, `<div class="p">🪙 ${fmt(it.price)}</div>`);
+    d.onclick = () => showItem(it, false);
+    el.appendChild(d);
+  });
+}
+
+function renderStats() {
+  const profit = S.earned + S.inv.reduce((s, x) => s + x.price, 0) - S.spent;
+  $('stats').innerHTML = [
+    ['Открыто кейсов', fmt(S.opened)],
+    ['Потрачено', '🪙 ' + fmt(S.spent)],
+    ['Выручка с продаж', '🪙 ' + fmt(S.earned)],
+    ['Итог (с инвентарём)', (profit >= 0 ? '+' : '') + fmt(profit)],
+    ['Апгрейдов', fmt(S.ups)],
+    ['Удачных апгрейдов', fmt(S.upWins)]
+  ].map(([a, b]) => `<div class="stat"><span>${a}</span><b>${b}</b></div>`).join('');
+  const bw = $('bestwrap'); bw.innerHTML = '';
+  if (S.best) {
+    bw.innerHTML = '<h2 style="margin-top:18px">Лучший дроп</h2>';
+    const d = itemEl(S.best, `<div class="p">🪙 ${fmt(S.best.price)}</div>`);
+    d.style.width = '140px'; d.style.height = '120px';
+    bw.appendChild(d);
+  }
+  $('sound').textContent = S.sound ? '🔊 Вкл' : '🔇 Выкл';
+}
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === id));
+  const tab = id === 's-case' ? 's-cases' : id;
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.s === tab));
+  if (id === 's-inv') renderInv();
+  if (id === 's-prof') renderStats();
+  if (id === 's-up') renderUp();
+  if (id !== 's-case' && tg && tg.BackButton) { try { tg.BackButton.hide(); } catch (e) {} }
+}
+
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// ---------- Звук ----------
+let ac = null;
+function beep(freq, dur, vol) {
+  if (!S.sound) return;
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'square'; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol || .035, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime + dur);
+    o.connect(g); g.connect(ac.destination);
+    o.start(); o.stop(ac.currentTime + dur + .01);
+  } catch (e) {}
+}
+
+// ---------- Рулетка ----------
+const ITEM_W = 110, STEP = 116, N = 60, WIN_I = 52;
+function spin() {
+  if (spinning || !cur) return;
+  if (S.bal < cur.price) { toast('Не хватает монет 😕'); haptic('error'); return; }
+  spinning = true;
+  $('open').disabled = true;
+  S.bal -= cur.price; S.spent += cur.price; updateBal(); save();
+  const win = rollItem(cur);
+  const strip = $('strip'), roll = $('roll');
+  strip.style.transition = 'none';
+  strip.style.transform = 'translateX(0)';
+  strip.innerHTML = '';
+  for (let i = 0; i < N; i++) strip.appendChild(itemEl(i === WIN_I ? win : filler(cur)));
+  void strip.offsetWidth;
+  const cw = roll.clientWidth;
+  const off = (Math.random() - .5) * (ITEM_W - 16);
+  const x = -(WIN_I * STEP + ITEM_W / 2 - cw / 2 + off);
+  strip.style.transition = 'transform 6s cubic-bezier(.1,.75,.15,1)';
+  strip.style.transform = `translateX(${x}px)`;
+  haptic('medium');
+
+  let last = -1;
+  (function tick() {
+    if (!spinning) return;
+    let mx = 0;
+    try { mx = new DOMMatrixReadOnly(getComputedStyle(strip).transform).m41; } catch (e) {}
+    const idx = Math.floor((-mx + cw / 2) / STEP);
+    if (idx !== last) { last = idx; beep(1100, .03); haptic('tick'); }
+    requestAnimationFrame(tick);
+  })();
+
+  strip.addEventListener('transitionend', () => {
+    spinning = false;
+    $('open').disabled = false;
+    S.opened++;
+    S.inv.unshift(win);
+    if (!S.best || win.price > S.best.price) S.best = win;
+    save();
+    const big = win.r === 'red' || win.r === 'gold';
+    haptic(big ? 'success' : 'light');
+    if (big) { beep(660, .12, .06); setTimeout(() => beep(880, .12, .06), 120); setTimeout(() => beep(1320, .25, .06), 240); }
+    else beep(520, .12, .05);
+    showItem(win, true);
+  }, { once: true });
+}
+
+// ---------- Модалка предмета ----------
+function showItem(it, fresh, head) {
+  const m = $('modal');
+  m.innerHTML = `<div class="card" style="--rc:${RAR[it.r].color}">
+    ${head ? `<div class="head">${head}</div>` : ''}
+    ${svg(it.t)}
+    <div class="rn">${RAR[it.r].name}</div>
+    <div class="cw">${it.st ? '<span class="st">ТРЕКЕР</span> ' : ''}${it.w}</div>
+    <div class="cn">${it.n}</div>
+    <div class="cwear">${it.wear}</div>
+    <div class="cp">🪙 ${fmt(it.price)}</div>
+    <div class="btns">
+      <button class="btn" id="m-sell">Продать</button>
+      <button class="btn y" id="m-ok">${fresh ? 'Забрать' : 'Закрыть'}</button>
+    </div>
+    ${fresh === true ? '<div class="btns"><button class="btn" id="m-again">Открыть ещё</button></div>' : ''}
+    ${!fresh ? '<div class="btns"><button class="btn" id="m-up">⬆️ В апгрейд</button></div>' : ''}
+  </div>`;
+  m.classList.add('show');
+  $('m-sell').onclick = () => { sell(it.id); closeModal(); };
+  $('m-ok').onclick = closeModal;
+  const again = $('m-again');
+  if (again) again.onclick = () => { closeModal(); spin(); };
+  const toUp = $('m-up');
+  if (toUp) toUp.onclick = () => { upSel = it; pickTarget(); closeModal(); show('s-up'); };
+}
+function closeModal() { $('modal').classList.remove('show'); if ($('s-inv').classList.contains('active')) renderInv(); if ($('s-up').classList.contains('active')) renderUp(); }
+$('modal').onclick = e => { if (e.target.id === 'modal') closeModal(); };
+
+function sell(id) {
+  const i = S.inv.findIndex(x => x.id === id);
+  if (i < 0) return;
+  const it = S.inv.splice(i, 1)[0];
+  S.bal += it.price; S.earned += it.price;
+  save(); updateBal(); haptic('light'); beep(1500, .06, .04);
+  toast(`Продано за 🪙 ${fmt(it.price)}`);
+}
+
+// ---------- Бонус ----------
+function updateBonus() {
+  const b = $('bonus');
+  const left = S.bonusAt + BONUS_CD - Date.now();
+  if (left <= 0) { b.disabled = false; b.textContent = '🎁 +' + BONUS; }
+  else {
+    b.disabled = true;
+    const h = Math.floor(left / 3600000), mm = Math.floor(left / 60000) % 60, ss = Math.floor(left / 1000) % 60;
+    b.textContent = `⏳ ${h}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+  }
+}
+$('bonus').onclick = () => {
+  if (S.bonusAt + BONUS_CD > Date.now()) return;
+  S.bal += BONUS; S.bonusAt = Date.now(); save(); updateBal(); updateBonus();
+  haptic('success'); toast(`+${BONUS} монет 🎁`);
+};
+
+// ---------- Кнопки ----------
+$('open').onclick = spin;
+function goBack() { if (spinning) return; show('s-cases'); }
+$('back').onclick = goBack;
+if (tg && tg.BackButton) { try { tg.BackButton.onClick(goBack); } catch (e) {} }
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => { if (spinning) { toast('Дождись конца прокрутки'); return; } show(b.dataset.s); });
+$('sellall').onclick = () => {
+  if (!S.inv.length) return;
+  const total = S.inv.reduce((s, x) => s + x.price, 0);
+  S.bal += total; S.earned += total; S.inv = [];
+  save(); updateBal(); renderInv(); haptic('success'); toast(`Продано всё за 🪙 ${fmt(total)}`);
+};
+$('donate').onclick = () => {
+  if (!BOT_USERNAME || BOT_USERNAME === 'ИМЯ_ТВОЕГО_БОТА') { toast('Автор ещё не подключил поддержку'); return; }
+  const url = `https://t.me/${BOT_USERNAME}?start=donate`;
+  haptic('light');
+  try { if (tg && tg.openTelegramLink) { tg.openTelegramLink(url); return; } } catch (e) {}
+  window.open(url, '_blank');
+};
+$('sound').onclick = () => { S.sound = !S.sound; save(); renderStats(); };
+$('reset').onclick = () => {
+  const doReset = ok => {
+    if (!ok) return;
+    S = { bal: 1000, inv: [], opened: 0, spent: 0, earned: 0, best: null, bonusAt: 0, sound: S.sound, ups: 0, upWins: 0 };
+    upSel = null; upTarget = null;
+    save(); updateBal(); updateBonus(); renderStats(); toast('Прогресс сброшен');
+  };
+  if (tg && tg.showConfirm) { try { tg.showConfirm('Сбросить весь прогресс?', doReset); return; } catch (e) {} }
+  doReset(confirm('Сбросить весь прогресс?'));
+};
+
+// ---------- Апгрейд ----------
+const MULTS = [1.5, 2, 3, 5, 10];
+const ARC_LEN = 2 * Math.PI * 64;
+let upSel = null, upTarget = null, upMult = 2, upAngle = 0;
+function pickTarget() {
+  if (!upSel) { upTarget = null; return; }
+  const want = upSel.price * upMult;
+  const cands = CATALOG.filter(x => x.price > upSel.price * 1.15)
+    .sort((a, b) => Math.abs(Math.log(a.price / want)) - Math.abs(Math.log(b.price / want)))
+    .slice(0, 4);
+  upTarget = cands.length ? Object.assign({}, cands[Math.floor(Math.random() * cands.length)], { price: Math.round(want) }) : null;
+}
+function upChance() {
+  if (!upSel || !upTarget) return 0;
+  return Math.min(0.85, upSel.price / upTarget.price * 0.9);
+}
+function renderUp() {
+  if (upSel && !S.inv.some(x => x.id === upSel.id)) { upSel = null; upTarget = null; }
+  const sel = $('up-sel'), tgt = $('up-tgt');
+  sel.innerHTML = ''; tgt.innerHTML = '';
+  sel.classList.toggle('full', !!upSel); tgt.classList.toggle('full', !!upTarget);
+  if (upSel) sel.appendChild(itemEl(upSel, `<div class="p">🪙 ${fmt(upSel.price)}</div>`)); else sel.textContent = 'Выбери скин ниже';
+  if (upTarget) tgt.appendChild(itemEl(upTarget, `<div class="p">🪙 ${fmt(upTarget.price)}</div>`));
+  else tgt.textContent = upSel ? 'Дороже скинов нет — это максимум!' : 'Здесь будет цель';
+  const ch = upChance();
+  $('up-arc').setAttribute('stroke-dasharray', `${ch * ARC_LEN} ${ARC_LEN}`);
+  $('up-pct').textContent = (ch * 100).toFixed(1).replace('.0', '') + '%';
+  $('mults').innerHTML = MULTS.map(m => `<button class="mult${m === upMult ? ' on' : ''}" data-m="${m}">x${m}</button>`).join('');
+  document.querySelectorAll('.mult').forEach(b => b.onclick = () => { if (spinning) return; upMult = +b.dataset.m; pickTarget(); renderUp(); });
+  $('up-go').disabled = !upSel || !upTarget || spinning;
+  $('up-go').textContent = upSel && upTarget ? `Апгрейд · ${(ch * 100).toFixed(1).replace('.0', '')}%` : 'Апгрейд';
+  $('up-reroll').disabled = !upSel || spinning;
+  const g = $('up-inv'); g.innerHTML = '';
+  if (!S.inv.length) { g.innerHTML = '<div class="empty" style="grid-column:1/-1">Инвентарь пуст.<br>Сначала открой пару кейсов!</div>'; return; }
+  S.inv.forEach(it => {
+    const d = itemEl(it, `<div class="p">🪙 ${fmt(it.price)}</div>`);
+    if (upSel && upSel.id === it.id) d.classList.add('sel');
+    d.onclick = () => { if (spinning) return; upSel = it; pickTarget(); renderUp(); haptic('light'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+    g.appendChild(d);
+  });
+}
+function doUpgrade() {
+  if (spinning || !upSel || !upTarget) return;
+  const ch = upChance(), win = Math.random() < ch, arc = ch * 360;
+  const land = win ? 2 + Math.random() * Math.max(0, arc - 4) : arc + 2 + Math.random() * Math.max(0, 360 - arc - 4);
+  const sel = upSel, tgt = upTarget;
+  spinning = true;
+  S.inv = S.inv.filter(x => x.id !== sel.id); S.ups++; save();
+  $('up-go').disabled = true; $('up-reroll').disabled = true;
+  const ptr = $('ptr');
+  ptr.style.transition = 'none';
+  ptr.style.transform = `rotate(${upAngle % 360}deg)`;
+  void ptr.getBoundingClientRect();
+  upAngle = 360 * 5 + land;
+  ptr.style.transition = 'transform 4.5s cubic-bezier(.15,.8,.2,1)';
+  ptr.style.transform = `rotate(${upAngle}deg)`;
+  haptic('medium');
+  let lastSeg = -1;
+  (function tick() {
+    if (!spinning) return;
+    try {
+      const m = new DOMMatrixReadOnly(getComputedStyle(ptr).transform);
+      const a = (Math.atan2(m.b, m.a) * 180 / Math.PI + 360) % 360;
+      const seg = Math.floor(a / 20);
+      if (seg !== lastSeg) { lastSeg = seg; beep(900, .025); haptic('tick'); }
+    } catch (e) {}
+    requestAnimationFrame(tick);
+  })();
+  setTimeout(() => {
+    spinning = false;
+    upSel = null; upTarget = null;
+    if (win) {
+      const item = Object.assign({}, tgt, { id: Date.now() + '' + Math.random().toString(36).slice(2, 7), wear: 'Почти новое', st: false });
+      S.inv.unshift(item); S.upWins++;
+      if (!S.best || item.price > S.best.price) S.best = item;
+      save(); haptic('success');
+      beep(660, .12, .06); setTimeout(() => beep(880, .12, .06), 120); setTimeout(() => beep(1320, .25, .06), 240);
+      renderUp(); showItem(item, 'up', 'Апгрейд удался! 🎉');
+    } else {
+      save(); haptic('error'); beep(220, .3, .06);
+      renderUp();
+      const m = $('modal');
+      m.innerHTML = `<div class="card lose" style="--rc:#555">
+        <div class="head">Не повезло 😢</div>${svg(sel.t)}
+        <div class="cw">${sel.w}</div><div class="cn">${sel.n}</div>
+        <div class="cwear">Скин сгорел в апгрейде</div>
+        <div class="btns"><button class="btn y" id="m-ok">Ок</button></div></div>`;
+      m.classList.add('show'); $('m-ok').onclick = closeModal;
+    }
+  }, 4650);
+}
+$('up-go').onclick = doUpgrade;
+$('up-reroll').onclick = () => { if (spinning) return; pickTarget(); renderUp(); };
+
+// ---------- Старт ----------
+renderCases(); updateBal(); updateBonus();
+setInterval(updateBonus, 1000);
+</script>
+</body>
+</html>
